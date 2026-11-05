@@ -9,7 +9,7 @@ Codex desktop向けスキルをプラグインとして配布するマーケッ�
 | 種類 | 名前 | 表示名 |
 | --- | --- | --- |
 | マーケットプレイス | `skill-marketplace-work` | skill-marketplace-work |
-| プラグイン | `change-understanding` | 変更の理解確認 |
+| プラグイン | `change-understanding-check` | 変更の理解確認 |
 | スキル | `change-understanding-quiz` | 変更理解クイズ |
 
 プラグインはスキルとフックをまとめたインストール単位です。スキルは理解クイズを進める作業手順で、次のように呼び出します。
@@ -47,7 +47,7 @@ CLIから追加・インストールする場合は、次を実行します。
 
 ```sh
 codex plugin marketplace add ryone9re/skill-marketplace-work
-codex plugin add change-understanding@skill-marketplace-work
+codex plugin add change-understanding-check@skill-marketplace-work
 ```
 
 マーケットプレイスの追加は、プラグインのインストールとは別の操作です。後で一覧から選んで導入することもできます。フックの信頼はデスクトップのフック確認画面、またはCLIの `/hooks` で確認できます。フックの実行には前述のCodex desktopの同梱Node.jsを使います。単体CLIでスキルをインストールしても、このランタイム条件は変わりません。
@@ -67,7 +67,7 @@ codex plugin marketplace upgrade skill-marketplace-work
 ```sh
 codex plugin marketplace upgrade skill-marketplace-work
 codex plugin remove change-understanding-quiz-skill@skill-marketplace-work
-codex plugin add change-understanding@skill-marketplace-work
+codex plugin add change-understanding-check@skill-marketplace-work
 ```
 
 呼び出し名は `$change-understanding-quiz` になります。旧スキルを手動配置していた場合も、新しいスキルへ置き換えてください。合格記録の保存先と形式は共通なので、対象コミットなどの条件を満たす記録は引き続き使えます。

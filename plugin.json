@@ -1,6 +1,6 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "change-understanding",
+  "name": "change-understanding-check",
   "version": "0.4.0",
   "description": "PR作成前に、変更の仕様・実装の前提・検証の限界・出荷判断を本人が説明できるか確認するCodexスキル。",
   "extensions": {
