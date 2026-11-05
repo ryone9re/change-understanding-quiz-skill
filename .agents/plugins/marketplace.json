@@ -1,0 +1,20 @@
+{
+  "name": "skill-marketplace-work",
+  "interface": {
+    "displayName": "skill-marketplace-work"
+  },
+  "plugins": [
+    {
+      "name": "change-understanding-quiz-skill",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
