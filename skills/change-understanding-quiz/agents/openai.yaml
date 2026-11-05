@@ -1,4 +1,4 @@
 interface:
   display_name: "変更理解クイズ"
   short_description: "PR作成前に仕様・前提・検証の限界・出荷判断を説明できるか確認する"
-  default_prompt: "$quiz-change-understanding で今回の変更について仕様と技術のクイズを出してください。"
+  default_prompt: "$change-understanding-quiz で今回の変更について仕様と技術のクイズを出してください。"

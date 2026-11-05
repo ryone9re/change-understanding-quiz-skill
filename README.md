@@ -10,12 +10,12 @@ Codex desktop向けスキルをプラグインとして配布するマーケッ�
 | --- | --- | --- |
 | マーケットプレイス | `skill-marketplace-work` | skill-marketplace-work |
 | プラグイン | `change-understanding` | 変更の理解確認 |
-| スキル | `quiz-change-understanding` | 変更理解クイズ |
+| スキル | `change-understanding-quiz` | 変更理解クイズ |
 
 プラグインはスキルとフックをまとめたインストール単位です。スキルは理解クイズを進める作業手順で、次のように呼び出します。
 
 ```text
-$quiz-change-understanding 今回の変更について理解クイズを出して、合格後にPRを作ってください。
+$change-understanding-quiz 今回の変更について理解クイズを出して、合格後にPRを作ってください。
 ```
 
 解説前に本人の予想と疑問を聞き、通常4〜6問を出題します。実装前から利用していれば着手前の仮説も確認します。PR直前に始めた場合は、その時点の予想として扱います。
@@ -70,16 +70,16 @@ codex plugin remove change-understanding-quiz-skill@skill-marketplace-work
 codex plugin add change-understanding@skill-marketplace-work
 ```
 
-呼び出し名は `$quiz-change-understanding` になります。旧スキルを手動配置していた場合も、新しいスキルへ置き換えてください。合格記録の保存先と形式は共通なので、対象コミットなどの条件を満たす記録は引き続き使えます。
+呼び出し名は `$change-understanding-quiz` になります。旧スキルを手動配置していた場合も、新しいスキルへ置き換えてください。合格記録の保存先と形式は共通なので、対象コミットなどの条件を満たす記録は引き続き使えます。
 
 ## 配布構成
 
 - `.agents/plugins/marketplace.json`: インストール可能なプラグインのカタログ。
 - `plugin.json`: 「変更の理解確認」プラグインの表示情報とフック参照。
-- `skills/quiz-change-understanding/`: スキル本体、UIメタデータ、同梱Node.js用ランチャーと合格記録スクリプト。
+- `skills/change-understanding-quiz/`: スキル本体、UIメタデータ、同梱Node.js用ランチャーと合格記録スクリプト。
 - `hooks/hooks.json`: セッション開始時の案内と、PR作成前の合格確認。
 
-カタログからリポジトリルートのプラグインを参照します。cloneしただけではインストールされません。スキルだけを手動配置する場合は `skills/quiz-change-understanding/` をCodexのスキル検出先（個人用の `~/.agents/skills/` またはプロジェクトの `.agents/skills/`）に配置できます。この場合、フックは別途設定が必要です。
+カタログからリポジトリルートのプラグインを参照します。cloneしただけではインストールされません。スキルだけを手動配置する場合は `skills/change-understanding-quiz/` をCodexのスキル検出先（個人用の `~/.agents/skills/` またはプロジェクトの `.agents/skills/`）に配置できます。この場合、フックは別途設定が必要です。
 
 ## フックの対象と制限
 

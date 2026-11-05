@@ -1,5 +1,5 @@
 ---
-name: quiz-change-understanding
+name: change-understanding-quiz
 description: PR作成前に本人の予想、変更の仕様、実装の前提、検証の根拠と限界、出荷判断をクイズで確認する。PR作成の依頼、変更の理解確認、理解クイズの依頼で使う。
 ---
 

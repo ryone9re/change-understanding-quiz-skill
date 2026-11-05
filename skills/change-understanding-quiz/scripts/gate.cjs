@@ -109,11 +109,11 @@ function deny(reason) {
 
 function hook(event) {
   if (event.hook_event_name === 'SessionStart') {
-    emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'PR作成前に $quiz-change-understanding を使う。本人の予想を聞き、仕様・前提と別案・検証の根拠と限界・出荷判断を本人が説明できるまでPR作成を保留する。gh pr create --base <比較先> を使う。' } });
+    emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'PR作成前に $change-understanding-quiz を使う。本人の予想を聞き、仕様・前提と別案・検証の根拠と限界・出荷判断を本人が説明できるまでPR作成を保留する。gh pr create --base <比較先> を使う。' } });
     return;
   }
   if (event.tool_name?.includes('create_pull_request')) {
-    deny('$quiz-change-understanding を完了し、対象リポジトリから gh pr create --base <比較先> を使ってください。');
+    deny('$change-understanding-quiz を完了し、対象リポジトリから gh pr create --base <比較先> を使ってください。');
     return;
   }
   const command = event.tool_input?.command;
@@ -135,7 +135,7 @@ function hook(event) {
     check(event.cwd, base);
     emit({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: '変更理解クイズは全問正解済みです。既存の承認ルールに従ってPRを作成してください。' } });
   } catch (error) {
-    deny('有効な合格記録を確認できません。$quiz-change-understanding を実行してください。 ' + error.message);
+    deny('有効な合格記録を確認できません。$change-understanding-quiz を実行してください。 ' + error.message);
   }
 }
 

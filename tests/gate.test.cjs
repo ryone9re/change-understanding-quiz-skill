@@ -4,8 +4,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-const gate = require('../skills/quiz-change-understanding/scripts/gate.cjs');
-const launcher = path.resolve(__dirname, '../skills/quiz-change-understanding/scripts/run.sh');
+const gate = require('../skills/change-understanding-quiz/scripts/gate.cjs');
+const launcher = path.resolve(__dirname, '../skills/change-understanding-quiz/scripts/run.sh');
 
 function repository(t) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'understanding quiz '));
@@ -133,6 +133,6 @@ test('session reminder and MCP guidance', () => {
     gate.hook({ hook_event_name: 'SessionStart' });
     gate.hook({ tool_name: 'mcp__github__create_pull_request' });
   } finally { console.log = log; }
-  assert.match(outputs[0].hookSpecificOutput.additionalContext, /\$quiz-change-understanding/);
+  assert.match(outputs[0].hookSpecificOutput.additionalContext, /\$change-understanding-quiz/);
   denied(outputs[1]);
 });

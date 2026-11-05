@@ -3,14 +3,14 @@
     "SessionStart": [{
       "hooks": [{
         "type": "command",
-        "command": "sh \"${PLUGIN_ROOT}/skills/quiz-change-understanding/scripts/run.sh\" hook"
+        "command": "sh \"${PLUGIN_ROOT}/skills/change-understanding-quiz/scripts/run.sh\" hook"
       }]
     }],
     "PreToolUse": [{
       "matcher": "Bash|create_pull_request",
       "hooks": [{
         "type": "command",
-        "command": "sh \"${PLUGIN_ROOT}/skills/quiz-change-understanding/scripts/run.sh\" hook"
+        "command": "sh \"${PLUGIN_ROOT}/skills/change-understanding-quiz/scripts/run.sh\" hook"
       }]
     }]
   }
