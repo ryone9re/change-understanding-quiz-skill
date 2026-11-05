@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "change-understanding-quiz-skill",
+  "version": "0.1.0",
+  "description": "PR作成前に、仕様と実装の理解をクイズで確認するCodexスキル。",
+  "extensions": {
+    "com.openai": {"hooks": "./hooks/hooks.json"}
+  }
+}

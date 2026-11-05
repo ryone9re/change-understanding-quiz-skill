@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "python3 \"${PLUGIN_ROOT}/skills/change-understanding-quiz-skill/scripts/gate.py\" hook"
+      }]
+    }],
+    "PreToolUse": [{
+      "matcher": "Bash|create_pull_request",
+      "hooks": [{
+        "type": "command",
+        "command": "python3 \"${PLUGIN_ROOT}/skills/change-understanding-quiz-skill/scripts/gate.py\" hook"
+      }]
+    }]
+  }
+}
