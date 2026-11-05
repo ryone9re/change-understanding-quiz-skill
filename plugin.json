@@ -1,13 +1,13 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "change-understanding-quiz-skill",
-  "version": "0.3.0",
+  "name": "change-understanding",
+  "version": "0.4.0",
   "description": "PR作成前に、変更の仕様・実装の前提・検証の限界・出荷判断を本人が説明できるか確認するCodexスキル。",
   "extensions": {
     "com.openai": {
       "hooks": "./hooks/hooks.json",
       "interface": {
-        "displayName": "変更理解クイズ",
+        "displayName": "変更の理解確認",
         "shortDescription": "PR作成前に、変更の仕様・前提・検証の限界・出荷判断を説明できるか確認します。",
         "longDescription": "本人の予想を聞き、仕様・実装の前提と別案・検証の根拠と限界・出荷判断をクイズで確認します。全問正解後にPR作成へ進みます。Codex desktop向けのスキルとフックを含みます。",
         "developerName": "ryone9re",

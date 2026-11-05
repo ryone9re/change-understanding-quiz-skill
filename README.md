@@ -1,22 +1,28 @@
 # skill-marketplace-work
 
-Codex desktop向けスキルをプラグインとして配布するマーケットプレイスです。現在は「変更理解クイズ」を収録しています。PR作成前に本人の予想を聞き、仕様・実装の前提と別案・検証の根拠と限界・出荷判断を確認し、全問正解してからPR作成へ進みます。
+Codex desktop向けスキルをプラグインとして配布するマーケットプレイスです。現在は「変更の理解確認」プラグインを収録しています。PR作成前に本人の予想を聞き、仕様・実装の前提と別案・検証の根拠と限界・出荷判断を確認し、全問正解してからPR作成へ進みます。
 
 [クイズで理解を確かめる発想元の投稿](https://x.com/fujikenbotebote/status/2117933646766379469)と、[Addy Osmaniの「Critical thinking when agents do the work」](https://x.com/addyosmani/status/2117512471930167377)をもとにしています。AIへ作業を任せても、判断の根拠を自分で説明できる状態を保つためのスキルです。
 
 ## 使い方
 
-マーケットプレイス名は `skill-marketplace-work`、収録プラグインとスキルの名前は `change-understanding-quiz-skill`、表示名は「変更理解クイズ」です。
+| 種類 | 名前 | 表示名 |
+| --- | --- | --- |
+| マーケットプレイス | `skill-marketplace-work` | skill-marketplace-work |
+| プラグイン | `change-understanding` | 変更の理解確認 |
+| スキル | `quiz-change-understanding` | 変更理解クイズ |
+
+プラグインはスキルとフックをまとめたインストール単位です。スキルは理解クイズを進める作業手順で、次のように呼び出します。
 
 ```text
-$change-understanding-quiz-skill 今回の変更について理解クイズを出して、合格後にPRを作ってください。
+$quiz-change-understanding 今回の変更について理解クイズを出して、合格後にPRを作ってください。
 ```
 
 解説前に本人の予想と疑問を聞き、通常4〜6問を出題します。実装前から利用していれば着手前の仮説も確認します。PR直前に始めた場合は、その時点の予想として扱います。
 
 AIの案と同じ結論を答える必要はありません。根拠を持った反論や、未確認事項を踏まえた判断も受け入れます。誤答には解説して別の例で再出題し、回答待ちの間はドラフトを含むPR作成を保留します。追加検証が必要と分かった場合は、先にその確認を行います。
 
-合格は出題時のHEAD、作業ブランチ、比較先ブランチに結び付けます。変更はコミット済みで、作業ツリーがクリーンな状態で受験します。コードや比較先が変わった場合は再受験します。旧バージョンの合格記録も再受験になります。
+合格は出題時のHEAD、作業ブランチ、比較先ブランチに結び付けます。変更はコミット済みで、作業ツリーがクリーンな状態で受験します。コードや比較先が変わった場合は再受験します。形式の異なる旧バージョンの合格記録は再受験になります。
 
 ## 実行環境と依存
 
@@ -34,14 +40,14 @@ Gitと、PR操作に使う認証済みのGitHub CLIは引き続き必要です�
    https://github.com/ryone9re/skill-marketplace-work
    ```
 
-2. `skill-marketplace-work` を選び、「変更理解クイズ」をインストールします。スキルとフックが同じプラグインに含まれています。
+2. `skill-marketplace-work` を選び、「変更の理解確認」をインストールします。スキルとフックが同じプラグインに含まれています。
 3. フックの確認画面で内容を確認して信頼し、新しいチャットでスキルを使います。インストールだけではフックは実行されません。
 
 CLIから追加・インストールする場合は、次を実行します。
 
 ```sh
 codex plugin marketplace add ryone9re/skill-marketplace-work
-codex plugin add change-understanding-quiz-skill@skill-marketplace-work
+codex plugin add change-understanding@skill-marketplace-work
 ```
 
 マーケットプレイスの追加は、プラグインのインストールとは別の操作です。後で一覧から選んで導入することもできます。フックの信頼はデスクトップのフック確認画面、またはCLIの `/hooks` で確認できます。フックの実行には前述のCodex desktopの同梱Node.jsを使います。単体CLIでスキルをインストールしても、このランタイム条件は変わりません。
@@ -54,14 +60,26 @@ codex plugin add change-understanding-quiz-skill@skill-marketplace-work
 codex plugin marketplace upgrade skill-marketplace-work
 ```
 
+## 旧名からの移行
+
+旧プラグイン `change-understanding-quiz-skill` をインストール済みの場合は、デスクトップのプラグイン画面で削除してから新しいプラグインを導入します。CLIでは次のように切り替えます。
+
+```sh
+codex plugin marketplace upgrade skill-marketplace-work
+codex plugin remove change-understanding-quiz-skill@skill-marketplace-work
+codex plugin add change-understanding@skill-marketplace-work
+```
+
+呼び出し名は `$quiz-change-understanding` になります。旧スキルを手動配置していた場合も、新しいスキルへ置き換えてください。合格記録の保存先と形式は共通なので、対象コミットなどの条件を満たす記録は引き続き使えます。
+
 ## 配布構成
 
 - `.agents/plugins/marketplace.json`: インストール可能なプラグインのカタログ。
-- `plugin.json`: 「変更理解クイズ」の表示情報とフック参照。
-- `skills/change-understanding-quiz-skill/`: スキル本体、UIメタデータ、同梱Node.js用ランチャーと合格記録スクリプト。
+- `plugin.json`: 「変更の理解確認」プラグインの表示情報とフック参照。
+- `skills/quiz-change-understanding/`: スキル本体、UIメタデータ、同梱Node.js用ランチャーと合格記録スクリプト。
 - `hooks/hooks.json`: セッション開始時の案内と、PR作成前の合格確認。
 
-カタログからリポジトリルートのプラグインを参照します。cloneしただけではインストールされません。スキルだけを手動配置する場合は `skills/change-understanding-quiz-skill/` をCodexのスキル検出先（個人用の `~/.agents/skills/` またはプロジェクトの `.agents/skills/`）に配置できます。この場合、フックは別途設定が必要です。
+カタログからリポジトリルートのプラグインを参照します。cloneしただけではインストールされません。スキルだけを手動配置する場合は `skills/quiz-change-understanding/` をCodexのスキル検出先（個人用の `~/.agents/skills/` またはプロジェクトの `.agents/skills/`）に配置できます。この場合、フックは別途設定が必要です。
 
 ## フックの対象と制限
 

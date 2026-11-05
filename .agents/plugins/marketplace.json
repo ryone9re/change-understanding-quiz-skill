@@ -5,7 +5,7 @@
   },
   "plugins": [
     {
-      "name": "change-understanding-quiz-skill",
+      "name": "change-understanding",
       "source": {
         "source": "local",
         "path": "./"
