@@ -75,7 +75,7 @@ codex plugin add change-understanding-check@skill-marketplace-work
 ## 配布構成
 
 - `.agents/plugins/marketplace.json`: インストール可能なプラグインのカタログ。
-- `plugin.json`: 「変更の理解確認」プラグインの表示情報とフック参照。
+- `.codex-plugin/plugin.json`: 「変更の理解確認」プラグインの表示情報とフック参照。
 - `skills/change-understanding-quiz/`: スキル本体、UIメタデータ、同梱Node.js用ランチャーと合格記録スクリプト。
 - `hooks/hooks.json`: セッション開始時の案内と、PR作成前の合格確認。
 
