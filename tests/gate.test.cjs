@@ -14,16 +14,14 @@ function repository(t) {
   git('init', '-b', 'main');
   git('config', 'user.name', 'Quiz Test');
   git('config', 'user.email', 'quiz@example.invalid');
-  function commit(value) {
-    fs.writeFileSync(path.join(cwd, 'behavior.txt'), value);
-    git('add', 'behavior.txt'); git('commit', '-m', value);
+  function commit(value, file = 'behavior.js') {
+    fs.writeFileSync(path.join(cwd, file), value);
+    git('add', file); git('commit', '-m', value);
   }
   commit('before'); git('switch', '-c', 'feature'); commit('after');
-  const record = () => ({ version: 2, snapshot: gate.snapshot(cwd, 'main'), initial_thoughts: 'I expect the file to change the result, but need to check callers.', questions: [
-    { category: 'spec', question: 'What result changes?', answer: 'after', correct: true, reason: 'behavior.txt changes the result' },
-    { category: 'technical', question: 'What assumption does this rely on?', answer: 'The caller reads behavior.txt; changing the caller is another option.', correct: true, reason: 'The call path uses this file.' },
-    { category: 'verification', question: 'What does the check establish and miss?', answer: 'The content changed; concurrent reads are untested.', correct: true, reason: 'The diff checks content only.' },
-    { category: 'judgment', question: 'Why can this be submitted?', answer: 'It meets the requested content change; concurrency review remains a reviewer question.', correct: true, reason: 'Reasoned scope and uncertainty are explicit.' },
+  const record = () => ({ version: 3, snapshot: gate.snapshot(cwd, 'main'), questions: [
+    { category: 'spec', question: 'What result changes?', answer: 'after', correct: true, reason: 'behavior.js changes the result' },
+    { category: 'technical', question: 'Where does the result come from?', answer: 'The caller reads behavior.js.', correct: true, reason: 'The call path uses this file.' },
   ] });
   function invoke(command, env = process.env) {
     const event = { hook_event_name: 'PreToolUse', tool_name: 'Bash', cwd, tool_input: { command } };
@@ -55,18 +53,23 @@ test('wrong answers require retry and all understanding areas', t => {
   record.questions[0].correct = false;
   assert.throws(() => gate.recordPass(repo.cwd, 'main', record), /全問正解/);
   record.questions[0].correct = true;
-  const judgment = record.questions.pop();
-  assert.throws(() => gate.recordPass(repo.cwd, 'main', record), /すべて/);
-  record.questions.push(judgment);
+  const technical = record.questions.pop();
+  assert.throws(() => gate.recordPass(repo.cwd, 'main', record), /両方/);
+  record.questions.push(technical);
   gate.recordPass(repo.cwd, 'main', record);
   passed(repo.invoke('gh pr create --base=main --draft'));
 });
 
-test('initial thoughts must be recorded before a pass', t => {
-  const repo = repository(t), record = repo.record();
-  record.initial_thoughts = '';
-  assert.throws(() => gate.recordPass(repo.cwd, 'main', record), /予想・疑問/);
-  record.initial_thoughts = 'I do not know the caller yet; I expect the changed file to affect its output.';
+test('documentation-only PRs skip the quiz and mixed PRs quiz only code', t => {
+  const repo = repository(t);
+  repo.git('switch', '-c', 'docs', 'main');
+  repo.commit('# Documentation', 'README.md');
+  repo.commit('Copyright', 'LICENSE');
+  assert.match(repo.invoke('gh pr create --base main').hookSpecificOutput.additionalContext, /クイズは対象外/);
+  repo.commit('after');
+  const record = repo.record();
+  assert.deepEqual(record.snapshot.implementation_paths, ['behavior.js']);
+  denied(repo.invoke('gh pr create --base main'));
   gate.recordPass(repo.cwd, 'main', record);
   passed(repo.invoke('gh pr create --base main'));
 });
@@ -74,7 +77,7 @@ test('initial thoughts must be recorded before a pass', t => {
 test('working tree and committed changes require a new quiz', t => {
   const repo = repository(t), record = repo.record();
   gate.recordPass(repo.cwd, 'main', record);
-  fs.writeFileSync(path.join(repo.cwd, 'behavior.txt'), 'third');
+  fs.writeFileSync(path.join(repo.cwd, 'behavior.js'), 'third');
   denied(repo.invoke('gh pr create --base main'));
   repo.commit('third');
   assert.throws(() => gate.recordPass(repo.cwd, 'main', record), /出題時/);
@@ -86,7 +89,10 @@ test('remote base updates require a new quiz', t => {
   const repo = repository(t);
   repo.git('update-ref', 'refs/remotes/origin/main', repo.git('rev-parse', 'main'));
   gate.recordPass(repo.cwd, 'main', repo.record());
-  repo.git('update-ref', 'refs/remotes/origin/main', repo.git('rev-parse', 'HEAD'));
+  repo.git('switch', 'main');
+  repo.commit('# Base update', 'README.md');
+  repo.git('update-ref', 'refs/remotes/origin/main', repo.git('rev-parse', 'main'));
+  repo.git('switch', 'feature');
   denied(repo.invoke('gh pr create --base main'));
 });
 
@@ -98,7 +104,7 @@ test('creation target and shell context must match the quiz', t => {
 
 test('old pass records require the updated quiz', t => {
   const repo = repository(t), record = repo.record();
-  record.version = 1;
+  record.version = 2;
   const file = repo.git('rev-parse', '--path-format=absolute', '--git-path', 'change-understanding-quiz-skill/pass.json');
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(record));

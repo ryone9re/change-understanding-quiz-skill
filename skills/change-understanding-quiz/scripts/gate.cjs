@@ -4,24 +4,34 @@ const { execFileSync } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { isDeepStrictEqual } = require('node:util');
 
-const categories = ['spec', 'technical', 'verification', 'judgment'];
+const categories = ['spec', 'technical'];
 const git = (cwd, ...args) => execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const emit = output => console.log(JSON.stringify(output));
 
+// shortcut: 文書はファイル名で判定する。プロジェクト固有の分類が必要になったら属性で指定する。
+function isDocumentation(file) {
+  return /\.(?:md|markdown|mdx|rst|adoc|asciidoc|org)$/i.test(file)
+    || /^(?:readme|changelog|license|copying|contributing|authors|notice)(?:\.txt)?$/i.test(path.basename(file))
+    || /^(?:docs?|documentation)\/.+\.txt$/i.test(file);
+}
+
 function snapshot(cwd, base) {
   const root = git(cwd, 'rev-parse', '--show-toplevel');
-  if (git(root, 'status', '--porcelain')) throw new Error('変更をコミットしてからクイズを開始してください。');
   const branch = git(root, 'symbolic-ref', '--short', 'HEAD');
   git(root, 'check-ref-format', `refs/heads/${base}`);
   let baseRef = `refs/remotes/origin/${base}`;
   try { git(root, 'rev-parse', '--verify', baseRef); }
   catch { baseRef = `refs/heads/${base}`; }
-  return {
-    root, branch, head: git(root, 'rev-parse', 'HEAD'), base, base_ref: baseRef,
-    base_tip: git(root, 'rev-parse', '--verify', `${baseRef}^{commit}`),
-    merge_base: git(root, 'merge-base', 'HEAD', baseRef),
-  };
+  const head = git(root, 'rev-parse', 'HEAD');
+  const baseTip = git(root, 'rev-parse', '--verify', `${baseRef}^{commit}`);
+  const mergeBase = git(root, 'merge-base', head, baseTip);
+  const changes = git(root, 'diff', '--name-status', '-z', '--no-renames', mergeBase, head, '--').split('\0');
+  const implementationPaths = changes.filter((file, i) => i % 2 === 1 && !isDocumentation(file));
+  if (implementationPaths.length && git(root, 'status', '--porcelain')) {
+    throw new Error('変更をコミットしてからクイズを開始してください。');
+  }
+  return { root, branch, head, base, base_ref: baseRef, base_tip: baseTip, merge_base: mergeBase, implementation_paths: implementationPaths };
 }
 
 function statePath(cwd) {
@@ -30,10 +40,7 @@ function statePath(cwd) {
 }
 
 function validateRecord(record) {
-  if (record?.version !== 2) throw new Error('現行の理解確認で再受験してください。');
-  if (typeof record.initial_thoughts !== 'string' || !record.initial_thoughts.trim()) {
-    throw new Error('説明を読む前の本人の予想・疑問を記録してください。');
-  }
+  if (record?.version !== 3) throw new Error('現行の理解確認で再受験してください。');
   if (!Array.isArray(record.questions)) throw new Error('回答・採点記録が必要です。');
   const covered = new Set();
   for (const question of record.questions) {
@@ -45,7 +52,7 @@ function validateRecord(record) {
     covered.add(question.category);
   }
   if (!categories.every(category => covered.has(category))) {
-    throw new Error('仕様・技術・検証の根拠と限界・出荷判断のすべてを確認してください。');
+    throw new Error('実装の挙動と処理の仕組みの両方を確認してください。');
   }
 }
 
@@ -64,9 +71,11 @@ function recordPass(cwd, base, record) {
 }
 
 function check(cwd, base) {
+  const current = snapshot(cwd, base);
+  if (!current.implementation_paths.length) return null;
   const record = readJson(statePath(cwd));
   validateRecord(record);
-  if (!isDeepStrictEqual(record.snapshot, snapshot(cwd, base))) throw new Error('合格後にHEAD・ブランチ・比較先が変わりました。再受験してください。');
+  if (!isDeepStrictEqual(record.snapshot, current)) throw new Error('合格後にHEAD・ブランチ・比較先が変わりました。再受験してください。');
   return record;
 }
 
@@ -109,11 +118,11 @@ function deny(reason) {
 
 function hook(event) {
   if (event.hook_event_name === 'SessionStart') {
-    emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'PR作成前に $change-understanding-quiz を使う。本人の予想を聞き、仕様・前提と別案・検証の根拠と限界・出荷判断を本人が説明できるまでPR作成を保留する。gh pr create --base <比較先> を使う。' } });
+    emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: '実装を含むPRの作成前に $change-understanding-quiz で、PRを出す開発者が今回の実装の挙動と処理を説明できるか確認する。文書だけのPRはクイズを省略する。gh pr create --base <比較先> を使う。' } });
     return;
   }
   if (event.tool_name?.includes('create_pull_request')) {
-    deny('$change-understanding-quiz を完了し、対象リポジトリから gh pr create --base <比較先> を使ってください。');
+    deny('差分の確認のため、対象リポジトリから gh pr create --base <比較先> を使ってください。');
     return;
   }
   const command = event.tool_input?.command;
@@ -132,8 +141,9 @@ function hook(event) {
       else if (tokens[i].startsWith('--base=')) base = tokens[i].slice(7);
     }
     if (!base) throw new Error('クイズと同じ比較先を --base で指定してください。');
-    check(event.cwd, base);
-    emit({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: '変更理解クイズは全問正解済みです。既存の承認ルールに従ってPRを作成してください。' } });
+    const record = check(event.cwd, base);
+    const message = record ? '変更理解クイズは全問正解済みです。' : '実装差分がないためクイズは対象外です。';
+    emit({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: message + '既存の承認ルールに従ってPRを作成してください。' } });
   } catch (error) {
     deny('有効な合格記録を確認できません。$change-understanding-quiz を実行してください。 ' + error.message);
   }
@@ -151,8 +161,8 @@ function main(args) {
     recordPass(process.cwd(), values.base, readJson(values.record));
     console.log('全問正解を記録しました。');
   } else if (action === 'check') {
-    check(process.cwd(), values.base);
-    console.log('現在の変更について合格済みです。');
+    const record = check(process.cwd(), values.base);
+    console.log(record ? '現在の変更について合格済みです。' : '実装差分がないためクイズは対象外です。');
   } else throw new Error('action must be snapshot, pass, check, or hook');
 }
 
